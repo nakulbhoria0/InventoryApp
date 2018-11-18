@@ -26,8 +26,6 @@ import com.nakulbhoria.inventoryapp.data.ProductContract.ProductEntry;
  */
 public class ProductDbHelper extends SQLiteOpenHelper {
 
-    public static final String LOG_TAG = ProductDbHelper.class.getSimpleName();
-
     /** Name of the database file */
     private static final String DATABASE_NAME = "inventory.db";
 

@@ -3,22 +3,25 @@ package com.nakulbhoria.inventoryapp;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import com.nakulbhoria.inventoryapp.data.ProductContract.ProductEntry;
 import com.nakulbhoria.inventoryapp.data.ProductDbHelper;
 
 public class MainActivity extends AppCompatActivity {
 
-    ProductDbHelper mDbHelper = new ProductDbHelper(this);
-    SQLiteDatabase currentSupplierName = mDbHelper.getWritableDatabase();
+    ProductDbHelper mDbHelper;
+    SQLiteDatabase db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        mDbHelper = new ProductDbHelper(this);
+
     }
 
     @Override
@@ -31,9 +34,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     private void insertData() {
-
-        // Create a ContentValues object where column names are the keys,
-        // and pet attributes from the editor are the values.
+        db = mDbHelper.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(ProductEntry.COLUMN_PRODUCT_NAME, "Product Name");
         values.put(ProductEntry.COLUMN_PRICE, "1999");
@@ -41,8 +42,8 @@ public class MainActivity extends AppCompatActivity {
         values.put(ProductEntry.COLUMN_SUPPLIER_NAME, "Supplier Name");
         values.put(ProductEntry.COLUMN_SUPPLIER_PHONE_NUMBER, "+919876543210");
 
-        // Insert a new row for pet in the database, returning the ID of that new row.
-        long newRowId = currentSupplierName.insert(ProductEntry.TABLE_NAME, null, values);
+
+        long newRowId = db.insert(ProductEntry.TABLE_NAME, null, values);
 
         // Show a toast message depending on whether or not the insertion was successful
         if (newRowId == -1) {
@@ -58,6 +59,7 @@ public class MainActivity extends AppCompatActivity {
     private void displayDatabaseInfo() {
 
 
+        db = mDbHelper.getReadableDatabase();
         // Define a projection that specifies which columns from the database
         // you will actually use after this query.
         String[] projection = {
@@ -68,7 +70,7 @@ public class MainActivity extends AppCompatActivity {
                 ProductEntry.COLUMN_SUPPLIER_PHONE_NUMBER};
 
         // Perform a query on the pets table
-        Cursor cursor = currentSupplierName.query(
+        Cursor cursor = db.query(
                 ProductEntry.TABLE_NAME,   // The table to query
                 projection,            // The columns to return
                 null,                  // The columns for the WHERE clause
@@ -77,17 +79,10 @@ public class MainActivity extends AppCompatActivity {
                 null,                  // Don't filter by row groups
                 null);                   // The sort order
 
-        TextView displayView = (TextView) findViewById(R.id.data);
+        TextView displayView = findViewById(R.id.data);
 
         try {
-            // Create a header in the Text View that looks like this:
-            //
-            // The pets table contains <number of rows in Cursor> pets.
-            // _id - name - breed - gender - weight
-            //
-            // In the while loop below, iterate through the rows of the cursor and display
-            // the information from each column in this order.
-            displayView.setText("The pets table contains " + cursor.getCount() + " pets.\n\n");
+            displayView.setText("The Products table contains " + cursor.getCount() + " products.\n\n");
             displayView.append(ProductEntry.COLUMN_PRODUCT_NAME + " - " +
                     ProductEntry.COLUMN_PRICE + " - " +
                     ProductEntry.COLUMN_PRODUCT_QUANTITY + " - " +
@@ -103,8 +98,6 @@ public class MainActivity extends AppCompatActivity {
 
             // Iterate through all the returned rows in the cursor
             while (cursor.moveToNext()) {
-                // Use that index to extract the String or Int value of the word
-                // at the current row the cursor is on.
 
                 String currentName = cursor.getString(nameColumnIndex);
                 String currentPrice = cursor.getString(priceColumnIndex);
