@@ -1,37 +1,100 @@
 package com.nakulbhoria.inventoryapp;
 
+import android.app.LoaderManager;
+import android.content.ContentUris;
 import android.content.ContentValues;
+import android.content.CursorLoader;
+import android.content.Intent;
+import android.content.Loader;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
-import android.widget.TextView;
-import android.widget.Toast;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ListView;
 
 import com.nakulbhoria.inventoryapp.data.ProductContract.ProductEntry;
 import com.nakulbhoria.inventoryapp.data.ProductDbHelper;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 
     ProductDbHelper mDbHelper;
     SQLiteDatabase db;
+    private static final int PRODUCT_LOADER = 0;
+    ProductCursorAdapter mCursorAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        mDbHelper = new ProductDbHelper(this);
 
+        FloatingActionButton fab = findViewById(R.id.fab);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(MainActivity.this, EditorActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        ListView productListView = findViewById(R.id.list);
+
+        // Find and set empty view on the ListView, so that it only shows when the list has 0 items.
+        View emptyView = findViewById(R.id.empty_view);
+        productListView.setEmptyView(emptyView);
+
+        mCursorAdapter = new ProductCursorAdapter(this, null);
+        productListView.setAdapter(mCursorAdapter);
+
+        // Setup the item click listener
+        productListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
+                // Create new intent to go to {@link EditorActivity}
+                Intent intent = new Intent(MainActivity.this, EditorActivity.class);
+
+
+                Uri currentPetUri = ContentUris.withAppendedId(ProductEntry.CONTENT_URI, id);
+
+                // Set the URI on the data field of the intent
+                intent.setData(currentPetUri);
+
+                // Launch the {@link EditorActivity} to display the data for the current product.
+                startActivity(intent);
+            }
+        });
+
+        getLoaderManager().initLoader(PRODUCT_LOADER, null, this);
     }
 
     @Override
-    protected void onStart() {
-        super.onStart();
-        insertData();
-        displayDatabaseInfo();
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // This adds menu items to the app bar.
+        getMenuInflater().inflate(R.menu.main, menu);
+        return true;
     }
 
-
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // User clicked on a menu option in the app bar overflow menu
+        switch (item.getItemId()) {
+            // Respond to a click on the "Insert dummy data" menu option
+            case R.id.action_insert_dummy_data:
+                insertData();
+                return true;
+            // Respond to a click on the "Delete all entries" menu option
+            case R.id.action_delete_all_entries:
+                deleteAllProducts();
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
 
     private void insertData() {
         db = mDbHelper.getWritableDatabase();
@@ -40,83 +103,37 @@ public class MainActivity extends AppCompatActivity {
         values.put(ProductEntry.COLUMN_PRICE, "1999");
         values.put(ProductEntry.COLUMN_PRODUCT_QUANTITY, 1);
         values.put(ProductEntry.COLUMN_SUPPLIER_NAME, "Supplier Name");
-        values.put(ProductEntry.COLUMN_SUPPLIER_PHONE_NUMBER, "+919876543210");
 
-
-        long newRowId = db.insert(ProductEntry.TABLE_NAME, null, values);
-
-        // Show a toast message depending on whether or not the insertion was successful
-        if (newRowId == -1) {
-            // If the row ID is -1, then there was an error with insertion.
-            Toast.makeText(this, "Error with saving data", Toast.LENGTH_SHORT).show();
-        } else {
-            // Otherwise, the insertion was successful and we can display a toast with the row ID.
-            Toast.makeText(this, "data saved with row id: " + newRowId, Toast.LENGTH_SHORT).show();
-        }
     }
 
+    private void deleteAllProducts() {
+        int rowsDeleted = getContentResolver().delete(ProductEntry.CONTENT_URI, null, null);
+        Log.v("MainActivity", rowsDeleted + " rows deleted from product database");
+    }
 
-    private void displayDatabaseInfo() {
-
-
-        db = mDbHelper.getReadableDatabase();
-        // Define a projection that specifies which columns from the database
-        // you will actually use after this query.
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         String[] projection = {
+                ProductEntry._ID,
                 ProductEntry.COLUMN_PRODUCT_NAME,
-                ProductEntry.COLUMN_PRICE,
-                ProductEntry.COLUMN_PRODUCT_QUANTITY,
-                ProductEntry.COLUMN_SUPPLIER_NAME,
-                ProductEntry.COLUMN_SUPPLIER_PHONE_NUMBER};
+                ProductEntry.COLUMN_SUPPLIER_NAME};
 
-        // Perform a query on the pets table
-        Cursor cursor = db.query(
-                ProductEntry.TABLE_NAME,   // The table to query
-                projection,            // The columns to return
-                null,                  // The columns for the WHERE clause
-                null,                  // The values for the WHERE clause
-                null,                  // Don't group the rows
-                null,                  // Don't filter by row groups
-                null);                   // The sort order
-
-        TextView displayView = findViewById(R.id.data);
-
-        try {
-            displayView.setText("The Products table contains " + cursor.getCount() + " products.\n\n");
-            displayView.append(ProductEntry.COLUMN_PRODUCT_NAME + " - " +
-                    ProductEntry.COLUMN_PRICE + " - " +
-                    ProductEntry.COLUMN_PRODUCT_QUANTITY + " - " +
-                    ProductEntry.COLUMN_SUPPLIER_NAME + " - " +
-                    ProductEntry.COLUMN_SUPPLIER_PHONE_NUMBER + "\n");
-
-
-            int nameColumnIndex = cursor.getColumnIndex(ProductEntry.COLUMN_PRODUCT_NAME);
-            int priceColumnIndex = cursor.getColumnIndex(ProductEntry.COLUMN_PRICE);
-            int quantityColumnIndex = cursor.getColumnIndex(ProductEntry.COLUMN_PRODUCT_QUANTITY);
-            int supplierNameColumnIndex = cursor.getColumnIndex(ProductEntry.COLUMN_SUPPLIER_NAME);
-            int supplierPhoneNumberIndex = cursor.getColumnIndex(ProductEntry.COLUMN_SUPPLIER_PHONE_NUMBER);
-
-            // Iterate through all the returned rows in the cursor
-            while (cursor.moveToNext()) {
-
-                String currentName = cursor.getString(nameColumnIndex);
-                String currentPrice = cursor.getString(priceColumnIndex);
-                int currentQuantity = cursor.getInt(quantityColumnIndex);
-                String currentSupplierName = cursor.getString(supplierNameColumnIndex);
-                String currentSupplierPhoneNumber = cursor.getString(supplierPhoneNumberIndex);
-                // Display the values from each column of the current row in the cursor in the TextView
-                displayView.append(("\n" +
-                        currentName + " - " +
-                        currentPrice + " - " +
-                        currentQuantity + " - " +
-                        currentSupplierName + " - " +
-                        currentSupplierPhoneNumber));
-            }
-        } finally {
-            // Always close the cursor when you're done reading from it. This releases all its
-            // resources and makes it invalid.
-            cursor.close();
-        }
+        // This loader will execute the ContentProvider's query method on a background thread
+        return new CursorLoader(this,   // Parent activity context
+                ProductEntry.CONTENT_URI,   // Provider content URI to query
+                projection,             // Columns to include in the resulting Cursor
+                null,                   // No selection clause
+                null,                   // No selection arguments
+                null);                  // Default sort order
     }
 
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        mCursorAdapter.swapCursor(data);
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+        mCursorAdapter.swapCursor(null);
+    }
 }
