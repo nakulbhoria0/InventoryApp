@@ -88,7 +88,6 @@ public class ProductProvider extends ContentProvider {
             throw new IllegalArgumentException("Product requires a name");
         }
 
-        // Check that the gender is valid
         Integer quantity = values.getAsInteger(ProductEntry.COLUMN_PRODUCT_QUANTITY);
         if (quantity == null || !ProductEntry.isValidQuantity(quantity)) {
             throw new IllegalArgumentException("Product requires valid quantity");

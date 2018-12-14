@@ -13,7 +13,7 @@ public final class ProductContract {
 
     public static final Uri BASE_CONTENT_URI = Uri.parse("content://" + CONTENT_AUTHORITY);
 
-    public static final String PATH_PRODUCT = "data";
+    public static final String PATH_PRODUCT = "product";
 
 
     public static final class ProductEntry {
@@ -36,7 +36,7 @@ public final class ProductContract {
 
         public final static String _ID = BaseColumns._ID;
 
-        public final static String TABLE_NAME = "data";
+        public final static String TABLE_NAME = "product";
 
         public final static String COLUMN_PRODUCT_NAME = "product_name";
 

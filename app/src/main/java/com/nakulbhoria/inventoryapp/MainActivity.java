@@ -97,13 +97,13 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     }
 
     private void insertData() {
-        db = mDbHelper.getWritableDatabase();
+       // db = mDbHelper.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(ProductEntry.COLUMN_PRODUCT_NAME, "Product Name");
         values.put(ProductEntry.COLUMN_PRICE, "1999");
         values.put(ProductEntry.COLUMN_PRODUCT_QUANTITY, 1);
         values.put(ProductEntry.COLUMN_SUPPLIER_NAME, "Supplier Name");
-
+        Uri newUri = getContentResolver().insert(ProductEntry.CONTENT_URI, values);
     }
 
     private void deleteAllProducts() {
