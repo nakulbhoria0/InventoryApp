@@ -16,6 +16,7 @@ public class ProductCursorAdapter extends CursorAdapter {
         super(context, c, 0);
     }
 
+
     @Override
     public View newView(Context context, Cursor cursor, ViewGroup parent) {
         return LayoutInflater.from(context).inflate(R.layout.list_item, parent, false);
@@ -25,7 +26,9 @@ public class ProductCursorAdapter extends CursorAdapter {
     public void bindView(View view, Context context, Cursor cursor) {
 
         TextView nameTextView = view.findViewById(R.id.name);
-        TextView summaryTextView = view.findViewById(R.id.summary);
+        TextView supplierNameTextView = view.findViewById(R.id.supplier_name);
+        TextView quantityTextView = view.findViewById(R.id.quantity);
+        quantityTextView.setText("");
 
         int nameColumnIndex = cursor.getColumnIndex(ProductEntry.COLUMN_PRODUCT_NAME);
         int supplierColumnIndex = cursor.getColumnIndex(ProductEntry.COLUMN_SUPPLIER_NAME);
@@ -38,7 +41,7 @@ public class ProductCursorAdapter extends CursorAdapter {
         }
 
         nameTextView.setText(productName);
-        summaryTextView.setText(productSupplierName);
+        supplierNameTextView.setText(productSupplierName);
 
     }
 }

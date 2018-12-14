@@ -27,7 +27,7 @@
         </activity>
         <provider
             android:name=".data.ProductProvider"
-            android:authorities="com.example.android.pets"
+            android:authorities="com.nakulbhoria.inventoryapp"
             android:exported="false" />
     </application>
 
